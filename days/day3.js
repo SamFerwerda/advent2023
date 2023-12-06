@@ -1,4 +1,5 @@
 const { processLineByLine } = require('../common');
+const _ = require('lodash');
 
 function adjacentIndeces(indexStart, indexEnd, indexRow, rows){
     const positionsToCheck = [];
@@ -24,27 +25,47 @@ function isPositionASpecialCharacter(position, rows){
     return char !== '.' && isNaN(char);
 }
 
-(async function () {
+async function main(){
     const lines = (await processLineByLine('engineCodes'));
     const foundNumbers = [];
+    const gears = {};
 
-    for (i in lines){
+    for (let i in lines){
         const line = lines[i];
         let nextIndex = 0;
         let numbers = line.match(/\d+/g);
         while (numbers.length) {
             const numberToCheck = numbers.shift();
             const startIndex = line.indexOf(numberToCheck, nextIndex);
-            const endIndex = startIndex + numberToCheck.length;
+            const endIndex = startIndex + numberToCheck.length - 1;
             nextIndex = endIndex;
-
             const positionsToCheck = adjacentIndeces(startIndex, endIndex, eval(i), lines);
             
-            // is engine part
+            // is engine part (part 1)
             if (!!positionsToCheck.find((position)=> isPositionASpecialCharacter(position, lines))){
-                foundNumbers.push(numberToCheck);
+                foundNumbers.push(eval(numberToCheck));
             }
+            // is gear part (part 2)
+            positionsToCheck.forEach((position)=>{
+                const char = lines[position[0]]?.[position[1]] ?? '.';
+                if (char === '*'){
+                    gears[position] = gears[position] ?? [];
+                    gears[position].push(numberToCheck);
+                }
+            });
         }
     }
-    console.log(foundNumbers);
+    let sumOfGears = 0;
+    _.values(gears).forEach((gear)=> {
+        if (gear.length > 1){
+            sumOfGears += _.multiply(...gear.map((g)=> eval(g)));
+        }
+    });
+
+    console.log(sumOfGears);
+    console.log(_.sum(foundNumbers));
+}
+
+(async function () {
+    await main();
 })();
