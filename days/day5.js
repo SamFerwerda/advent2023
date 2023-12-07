@@ -2,12 +2,27 @@ const { processLineByLine } = require('../common');
 
 const differentMaps = ['seed-to-soil', 'soil-to-fertilizer', 'fertilizer-to-water', 'water-to-light', 'light-to-temperature', 'temperature-to-humidity', 'humidity-to-location'];
 
+function locationOfSeed(seed, transitionMaps){
+    let indexOfState = seed;
+    
+    for (i in differentMaps){
+        const transition = differentMaps[i];
+        const transitionRanges = transitionMaps[transition];
+        const transitionOfSeed = transitionRanges.find((transition)=> transition.sourceRange.min <= indexOfState && indexOfState <= transition.sourceRange.max);
+        const destinationRange = transitionOfSeed?.destination
+        if (destinationRange){
+            const seedLocationOffset = indexOfState - transitionOfSeed.sourceRange.min;
+            indexOfState = destinationRange.min + seedLocationOffset;
+        }
+    }
+    
+    return indexOfState;
+}
+
 function retrieveInformationFromLines(lines){
     const transitionMaps = {
         'seed-to-soil': [], 'soil-to-fertilizer': [], 'fertilizer-to-water':[], 'water-to-light':[], 'light-to-temperature':[], 'temperature-to-humidity':[], 'humidity-to-location':[]
     }
-
-    const seeds = lines[0].split(':')[1].trim().split(' ');
     differentMaps.forEach((transition, index)=>{
         const nextTransition = differentMaps[index + 1] ?? 'does-not-exist';
         const transitionStartIndex = lines.indexOf(`${transition} map:`);
@@ -29,40 +44,18 @@ function retrieveInformationFromLines(lines){
             transitionMaps[transition].push(transitionOfLine);
         }
     });
-    return {seeds, transitionMaps};
-}
-
-function transitionSeedsToLocation(seeds, transitionMaps){
-    const result = [];
-    seeds.forEach((seed)=>{
-        const seedInformation = {seed: eval(seed)};
-        let indexOfState = seed;
-        
-        for (i in differentMaps){
-            const transition = differentMaps[i];
-            const transitionRanges = transitionMaps[transition];
-            const destinationName = transition.split('-to-')[1];
-            const transitionOfSeed = transitionRanges.find((transition)=> transition.sourceRange.min <= indexOfState && indexOfState <= transition.sourceRange.max);
-            const destinationRange = transitionOfSeed?.destination
-            if (destinationRange){
-                const seedLocationOffset = indexOfState - transitionOfSeed.sourceRange.min;
-                indexOfState = destinationRange.min + seedLocationOffset;
-            } 
-            seedInformation[destinationName] = indexOfState;
-        }
-        result.push(seedInformation);
-    });
-    return result;
+    return transitionMaps;
 }
 
 function part1(lines){
-    const {seeds, transitionMaps} = retrieveInformationFromLines(lines);
-    const result = transitionSeedsToLocation(seeds, transitionMaps);
+    const transitionMaps = retrieveInformationFromLines(lines);
+    const seeds = lines[0].split(':')[1].trim().split(' ');
     
     let lowestNumber = Infinity;
-    result.forEach((seedInformation)=>{
-        if (seedInformation.location < lowestNumber){
-            lowestNumber = seedInformation.location;
+    seeds.forEach((seed)=>{
+        const location = locationOfSeed(eval(seed), transitionMaps);
+        if (location < lowestNumber){
+            lowestNumber = location;
         }
     });
 
@@ -70,12 +63,28 @@ function part1(lines){
 }
 
 function part2(lines){
-    // to do
+    const transitionMaps = retrieveInformationFromLines(lines);
+    const initialSeeds = lines[0].split(':')[1].trim().split(' ');
+
+    let lowestNumber = Infinity;
+
+    for (let i = 0; i < initialSeeds.length-1; i+=2){
+        console.log(`Initiating seed ${i}/${initialSeeds.length-1}`);
+        const initialSeed = eval(initialSeeds[i]);
+        const range = eval(initialSeeds[i+1]);
+        for (let j = initialSeed; j < initialSeed + range; j++){
+            const location = locationOfSeed(j, transitionMaps);
+            if (location < lowestNumber){
+                lowestNumber = location;
+            }
+        }
+    }
+    console.log(lowestNumber);
 }
 
 (async function main(){
     const lines = await processLineByLine('seeds');
-   
+    
     // part1(lines); 
 
     part2(lines);
