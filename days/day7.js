@@ -23,7 +23,7 @@ function determineStrength(hand){
         const strongestCard = getStrongestCardOfHandNotJ(orderedList);
         orderedList = orderedList.map((card)=> card === 'J' ? strongestCard : card);
     }
-    const set = new Set(orderedList);
+    const set = new Set(orderedList.sort());
     const size = set.size;
     if (size === 1){
         // 5 of a kind
