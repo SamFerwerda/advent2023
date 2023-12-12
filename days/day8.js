@@ -1,4 +1,5 @@
 const { processLineByLine } = require("../common")
+const { lcm } = require('mathjs')
 
 function createMappingOfDirections(lines){
     const mapping = {};
@@ -10,24 +11,52 @@ function createMappingOfDirections(lines){
     return mapping;
 
 }
-(async function main(){
-    const lines = await processLineByLine('LR');
+
+function getNextState(mapping, state, direction){
+    return mapping[state][direction];
+}
+
+function part1(lines){
     const instructionString = lines.shift();
     const mapping = createMappingOfDirections(lines);
 
-    let startDirection = 0;
-    let steps = 0;
+    let start = 0;
     let currentState = 'AAA';
     while (currentState !== 'ZZZ'){
-        const currentInstruction = instructionString[startDirection];
-        const currentDirection = mapping[currentState][currentInstruction];
-        currentState = currentDirection;
-        startDirection++;
-        steps++;
-        // at the end of the string, return to start
-        if (startDirection === instructionString.length){
-            startDirection = 0;
+        currentState = getNextState(mapping, currentState, instructionString[start%(instructionString.length)]);
+        start++;
+    }
+    console.log(start);
+}
+
+function RunUntilCycleFound(mapping, state, instructionString){
+    let start = 0;
+    let currentState = state;
+    let mappingOfEndStates = {};
+    while (true){
+        currentState = getNextState(mapping, currentState, instructionString[start%(instructionString.length)]);
+        start++;
+        if (currentState[2] == "Z"){
+            if (mappingOfEndStates[currentState] !== undefined){
+                // Ending state already found, calculating cycle length
+                return start - mappingOfEndStates[currentState];
+            }
+            mappingOfEndStates[currentState] = start;
         }
     }
-    console.log(steps);
+};
+
+function part2(lines){
+    const instructionString = lines.shift();
+    const mapping = createMappingOfDirections(lines);
+
+    const cycles = Object.keys(mapping).filter((state)=> state[2] === 'A').map((state)=> RunUntilCycleFound(mapping, state, instructionString));
+    console.log(lcm(...cycles));
+}
+
+(async function main(){
+    const lines = await processLineByLine('LR');
+   
+    // part1(lines);
+    part2(lines);
 })()
