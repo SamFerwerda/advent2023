@@ -2,27 +2,27 @@ const { processLineByLine } = require('../common.js');
 const fs = require('fs').promises;
 const allCards = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 
-function getStrongestCardOfHandNotJ(hand){
+function getStrongestCardOfHandNotJ(orderedList){
     // go over the hand from strongest to weakest and check for occurance
-    const orderedList = hand.split('').sort();
-    console.log(`Before:` + orderedList);
     let occurance = 5;
     while (occurance > 0){
         const card = allCards.find((card)=>{
             return orderedList.filter((c)=> c === card).length === occurance;
         });
         if (card){
-            console.log(`Best:` + card);
             return card;
         }
         occurance--;
     }
+    return 'J';
 };
 
 function determineStrength(hand){
     let orderedList = hand.split('').sort();
-    const strongestCard = getStrongestCardOfHandNotJ(hand);
-    orderedList = orderedList.map((card)=> card === 'J' ? strongestCard : card);
+    if (orderedList.includes('J')){
+        const strongestCard = getStrongestCardOfHandNotJ(orderedList);
+        orderedList = orderedList.map((card)=> card === 'J' ? strongestCard : card);
+    }
     const set = new Set(orderedList);
     const size = set.size;
     if (size === 1){
@@ -52,8 +52,8 @@ function isFirstHandBetterThenSecond(firstHand, secondHand){
     const strengthMap = {'T': 10, 'J': 1, 'Q': 11, 'K': 12, 'A': 13};
     if (firstHand.strength === secondHand.strength){
         for (let index=0; index < firstHand.cards.length; index++){
-            const playerOneCard = strengthMap[firstHand.cards[index]] || eval(firstHand.cards[index]);
-            const playerTwoCard = strengthMap[secondHand.cards[index]] || eval(secondHand.cards[index]);
+            const playerOneCard = isNaN(firstHand.cards[index]) ? strengthMap[firstHand.cards[index]] : firstHand.cards[index];
+            const playerTwoCard = isNaN(secondHand.cards[index]) ? strengthMap[secondHand.cards[index]] : secondHand.cards[index];
             if (playerOneCard !== playerTwoCard){
                 return playerOneCard > playerTwoCard ? -1 : 1;
             }
@@ -71,7 +71,7 @@ function isFirstHandBetterThenSecond(firstHand, secondHand){
         return {cards, bid: eval(bid), strength};
     });
     const sortedByStrength = hands.sort(isFirstHandBetterThenSecond).reverse(-1);
-    const score = sortedByStrength.reduce((prev, curr, index)=> prev + curr.bid * (index+1), 0);
+    const score = sortedByStrength.reduce((prev, curr, index)=> prev + (curr.bid * (index+1)), 0);
     await fs.writeFile('sortedArray.json', JSON.stringify(sortedByStrength));
     console.log(score);
 })()
