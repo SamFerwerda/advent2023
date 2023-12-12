@@ -16,7 +16,7 @@ function arrayOfDifferences(array){
     return differences;
 }
 
-function differenceUntilZeroes(array){
+function differenceUntilZeroes(array, part2=false){
     let index = 0;
     let newArray = array;
     let differences = [array];
@@ -29,15 +29,23 @@ function differenceUntilZeroes(array){
     differences = differences.reverse(-1);
     let lastDifference = 0;
     for (let index=1; index < differences.length; index++){
-        const currentLayer = differences[index];
-        lastElement = currentLayer[currentLayer.length - 1];
-        lastDifference = lastDifference + lastElement;
+        if (part2){
+            const currentLayer = differences[index].reverse(-1);
+            lastElement = currentLayer[currentLayer.length - 1];
+            lastDifference = lastElement - lastDifference;
+        } else {
+            const currentLayer = differences[index];
+            lastElement = currentLayer[currentLayer.length - 1];
+            lastDifference = lastDifference + lastElement ;
+        }
     }
     return lastDifference;
 }
 
-
-function part1(lines){
+(async function main(){
+    const lines = await processLineByLine('history');
+   
+    // part 1
     const results = [];
     for (let index=0; index < lines.length; index++){
         const numbers = lines[index].split(' ').map((element)=> parseInt(element));
@@ -45,11 +53,13 @@ function part1(lines){
         results.push(extrapolated);
     }
     console.log(arraySum(results));
-}
 
-(async function main(){
-    const lines = await processLineByLine('history');
-   
-    part1(lines);
-    // part2(lines);
+    // part 2
+    const results2 = [];
+    for (let index=0; index < lines.length; index++){
+        const numbers = lines[index].split(' ').map((element)=> parseInt(element));
+        const extrapolated = differenceUntilZeroes(numbers, true);
+        results2.push(extrapolated);
+    }
+    console.log(arraySum(results2));
 })()
