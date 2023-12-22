@@ -9,6 +9,7 @@ AMOUNT_OF_EMPTY = 1000000;
 
     const columnsToNotExpand = [];
     const rowsToExpand = [];
+    const coordinatesOfGalaxies = [];
 
     // expend rows and columns without galaxies
     // get all expandable columns & rows
@@ -20,23 +21,12 @@ AMOUNT_OF_EMPTY = 1000000;
         for (let column=0; column < row.length; column++){
             if (row[column] === '#'){
                 columnsToNotExpand.push(column);
-                continue;
+                coordinatesOfGalaxies.push([rowIndex, column]);
             }
         }
     };
 
     const columnsToExpand = lines[0].map((_, index) => index).filter((column) => !columnsToNotExpand.includes(column));
-
-    // get all the galaxy coordinates
-    const coordinatesOfGalaxies = [];
-    for (let row=0; row < lines.length; row++){
-        for (let column=0; column < lines[row].length; column++){
-            if (lines[row][column] === '#'){
-                coordinatesOfGalaxies.push([row, column]);
-            }
-        }
-    };
-
     const copyOfCoordinates = _.cloneDeep(coordinatesOfGalaxies);
 
     // go over all the coordinates and their shortest distance and add it to the total array
